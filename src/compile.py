@@ -257,6 +257,34 @@ class LaTeXCompiler:
 
         self.logger.info(f"PPTX conversion complete: {converted}/{len(tex_files)} files")
 
+    def generate_video(self, use_openai_tts: bool = True, voice: str = "alloy"):
+        """Generate lecture videos for all chapters that have slides.pdf + script.md."""
+        from src.video import VideoGenerator
+
+        gen = VideoGenerator(use_openai_tts=use_openai_tts, voice=voice)
+        tex_files = self.find_latex_files()
+        if not tex_files:
+            self.logger.info("No chapter directories found for video generation")
+            return
+
+        converted = 0
+        for tex_file in tex_files:
+            pdf_path = tex_file.with_suffix(".pdf")
+            script_path = tex_file.parent / "script.md"
+            if pdf_path.exists() and script_path.exists():
+                try:
+                    gen.generate(str(pdf_path), str(script_path), str(tex_file.parent))
+                    converted += 1
+                except Exception as e:
+                    self.logger.error(f"Video generation failed for {tex_file.parent.name}: {e}")
+            else:
+                self.logger.warning(
+                    f"Skipping {tex_file.parent.name}: missing "
+                    f"{'slides.pdf' if not pdf_path.exists() else 'script.md'}"
+                )
+
+        self.logger.info(f"Video generation complete: {converted} lecture video(s) generated")
+
 # Example usage:
 if __name__ == "__main__":
     output_directory = "/home/ubuntu/EduAgents/exp/30dm"

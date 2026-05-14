@@ -99,7 +99,7 @@ class ADDIERunner:
     Runner class for the ADDIE workflow
     Handles command-line interaction and execution logic
     """
-    def __init__(self, addie_instance, output_dir="output", resume: bool = False):
+    def __init__(self, addie_instance, output_dir="output", resume: bool = False, generate_video: bool = False):
         """
         Initialize the runner with an ADDIE instance
 
@@ -108,11 +108,13 @@ class ADDIERunner:
             output_dir: Directory to read/write deliberation outputs.
             resume: If True, skip deliberations whose outputs are already
                 present on disk and pick up chapter work mid-stream.
+            generate_video: If True, generate lecture videos after compilation.
         """
         self.addie = addie_instance
         self.course_name = None
         self.output_dir = output_dir
         self.resume = resume
+        self.generate_video = generate_video
         self.results = []
         self.chapters = []
 
@@ -309,6 +311,9 @@ class ADDIERunner:
         # After all chapters, compile the LaTeX source and slides script
         compiler = LaTeXCompiler(self.output_dir)
         compiler.compile_all()
+
+        if self.generate_video:
+            compiler.generate_video()
 
     def _cleanup_checkpoints(self):
         """Remove any leftover _checkpoint.json files under output_dir.
@@ -587,7 +592,7 @@ class ADDIE:
     ADDIE (Analyze, Design, Develop, Implement, Evaluate) class for instructional design
     This class coordinates a series of deliberations to create a complete course design
     """
-    def __init__(self, course_name, model_name: str = "gpt-4o-mini", copilot: bool = False, catalog: bool = False, data_catalog: dict = {}, data_copilot: dict = {}, seed: int = None, temperature: float = None, resume: bool = False):
+    def __init__(self, course_name, model_name: str = "gpt-4o-mini", copilot: bool = False, catalog: bool = False, data_catalog: dict = {}, data_copilot: dict = {}, seed: int = None, temperature: float = None, resume: bool = False, generate_video: bool = False):
         """
         Initialize ADDIE workflow
 
@@ -605,6 +610,7 @@ class ADDIE:
         self.copilot = copilot
         self.catalog = catalog
         self.resume = resume
+        self.generate_video = generate_video
         self.llm = LLM(model_name=model_name, seed=seed, temperature=temperature)
         self.deliberations = []
         self.results = []
@@ -946,5 +952,5 @@ class ADDIE:
         Returns:
             List of results from each deliberation
         """
-        runner = ADDIERunner(self, output_dir=output_dir, resume=self.resume)
+        runner = ADDIERunner(self, output_dir=output_dir, resume=self.resume, generate_video=self.generate_video)
         return runner.run()

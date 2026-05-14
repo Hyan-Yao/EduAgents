@@ -34,7 +34,7 @@ def load_catalog(catalog_dir: str = "catalog", catalog_name: str = "merged_catal
     return data_catalog
 
 
-def run_instructional_design(course_name: str, copilot = None, catalog = None, model_name: str = "gpt-4o-mini", exp_name: str = "test", seed: int = None, temperature: float = None, resume: bool = False):
+def run_instructional_design(course_name: str, copilot = None, catalog = None, model_name: str = "gpt-4o-mini", exp_name: str = "test", seed: int = None, temperature: float = None, resume: bool = False, generate_video: bool = False):
     """
     Main function to run the instructional design workflow by sequentially
     executing the six deliberation processes
@@ -95,7 +95,7 @@ def run_instructional_design(course_name: str, copilot = None, catalog = None, m
 
 
     from src.ADDIE import ADDIE
-    addie = ADDIE(course_name, model_name=model_name, copilot=use_copilot, catalog=use_catalog, data_catalog=data_catalog, data_copilot=data_copilot, seed=seed, temperature=temperature, resume=resume)
+    addie = ADDIE(course_name, model_name=model_name, copilot=use_copilot, catalog=use_catalog, data_catalog=data_catalog, data_copilot=data_copilot, seed=seed, temperature=temperature, resume=resume, generate_video=generate_video)
 
     # Run the workflow
     output_dir = f"./exp/{exp_name}/"
@@ -255,7 +255,36 @@ def main():
         help="Convert existing .tex files to .pptx. Provide exp directory path (e.g., ./exp/my_course/)"
     )
 
+    # Video generation arguments
+    parser.add_argument(
+        "--video",
+        action="store_true",
+        help="Also generate lecture videos (MP4) after slides during course generation"
+    )
+
+    parser.add_argument(
+        "--convert-video",
+        type=str,
+        default=None,
+        metavar="DIR",
+        help="Generate lecture videos from existing chapter outputs (slides.pdf + script.md). "
+             "Provide exp directory path (e.g., ./exp/my_course/)"
+    )
+
     args = parser.parse_args()
+
+    # Video-only conversion mode (no ADDIE workflow)
+    if args.convert_video is not None:
+        from src.video import VideoGenerator
+        gen = VideoGenerator()
+        results = gen.convert_directory(args.convert_video)
+        if results:
+            print(f"\nGenerated {len(results)} lecture video(s):")
+            for r in results:
+                print(f"  {r}")
+        else:
+            print("No chapter directories with slides.pdf + script.md found.")
+        return
 
     # PPTX-only conversion mode (no ADDIE workflow, no API key needed)
     if args.convert_pptx is not None:
@@ -299,6 +328,7 @@ def main():
             seed=args.seed,
             temperature=args.temperature,
             resume=args.resume,
+            generate_video=args.video,
         )
 
 

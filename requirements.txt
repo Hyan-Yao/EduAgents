@@ -23,7 +23,13 @@ numpy>=1.24.0
 # PPTX generation (pptxgenjs via Node.js) + content QA
 markitdown[pptx]>=0.1.0
 
+# Video generation dependencies
+PyMuPDF>=1.23.0
+gtts>=2.4.0
+moviepy>=1.0.3
+
 # Note: pdflatex is installed via system package manager in Docker
+# Note: ffmpeg is required for video concatenation — install via system package manager
 #
 # Node.js dependencies (install via npm, not pip):
 #   npm install -g pptxgenjs              # Required for LaTeX-to-PPTX conversion
