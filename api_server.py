@@ -68,6 +68,7 @@ class OptimizeRequest(BaseModel):
     model_name: str = Field(default="gpt-4o-mini", description="OpenAI model to use")
     exp_name: str = Field(default="default", description="Experiment name for output")
     chapter_name: Optional[str] = Field(default=None, description="Specific chapter to optimize (None = all)")
+    mode: str = Field(default="regenerate", description="Improvement strategy: 'regenerate' (per-slide full rewrite) or 'refine' (localized frame-level rewrite)")
 
 class TaskStatus(BaseModel):
     task_id: str
@@ -953,6 +954,8 @@ async def run_optimization_task(task_id: str, request: OptimizeRequest, api_key:
         sys.stdout.flush()
         print(f"Experiment: {request.exp_name}")
         sys.stdout.flush()
+        print(f"Mode: {request.mode}")
+        sys.stdout.flush()
         if request.chapter_name:
             print(f"Chapter: {request.chapter_name}")
             sys.stdout.flush()
@@ -969,6 +972,7 @@ async def run_optimization_task(task_id: str, request: OptimizeRequest, api_key:
             model_name=request.model_name,
             exp_name=request.exp_name,
             chapter_name=request.chapter_name,
+            mode=request.mode,
         )
 
         print("\n" + "=" * 60)
